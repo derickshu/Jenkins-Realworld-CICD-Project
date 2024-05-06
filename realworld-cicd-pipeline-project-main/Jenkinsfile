@@ -24,30 +24,34 @@ pipeline {
       steps {
         dir('realworld-cicd-pipeline-project-main/') {
         sh 'mvn clean package'
+        } 
       }
       post {
         success {
           echo ' now Archiving '
-          archiveArtifacts artifacts: '**/*.war'
+          archiveArtifacts artifacts: '/*.war'
         }
-      }
+       }
     }
-    stage('Unit Test'){
+    stage('Unit Test') {
         steps {
             dir('realworld-cicd-pipeline-project-main/') {
             sh 'mvn test'
+            }
         }
     }
-    stage('Integration Test'){
+    stage('Integration Test') {
         steps {
             dir('realworld-cicd-pipeline-project-main/') {
           sh 'mvn verify -DskipUnitTests'
+          }
         }
     }
-    stage ('Checkstyle Code Analysis'){
+    stage ('Checkstyle Code Analysis') {
         steps {
             dir('realworld-cicd-pipeline-project-main/') {
             sh 'mvn checkstyle:checkstyle'
+            }
         }
         post {
             success {
@@ -55,7 +59,7 @@ pipeline {
             }
         }
     }
-    stage('SonarQube Inspection') {
+    stage('SonarQube Inspection') { 
         steps {
             dir('realworld-cicd-pipeline-project-main/') {
             withSonarQubeEnv('SonarQube') { 
@@ -67,11 +71,12 @@ pipeline {
                 -Dsonar.login=$SONAR_TOKEN
                 """
                 }
+            }    
             }
         }
     }
 
-    stage("Nexus Artifact Uploader"){
+    stage("Nexus Artifact Uploader") {
         steps{
         dir('realworld-cicd-pipeline-project-main/') {
            nexusArtifactUploader(
@@ -87,8 +92,9 @@ pipeline {
                   classifier: '',
                   file: "${WORKSPACE}/webapp/target/webapp.war",
                   type: 'war']
-              ]
-           )
+             ]
+          )
+           }
         }
     }
     stage('Deploy to Development Env') {
@@ -99,7 +105,8 @@ pipeline {
             dir('realworld-cicd-pipeline-project-main/') {
             withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
                 sh "ansible-playbook -i ${WORKSPACE}/ansible-config/aws_ec2.yaml ${WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=$WORKSPACE\""
-            }
+             }
+          }
         }
     }
     stage('Deploy to Staging Env') {
@@ -110,6 +117,7 @@ pipeline {
             dir('realworld-cicd-pipeline-project-main/') {
             withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
                 sh "ansible-playbook -i ${WORKSPACE}/ansible-config/aws_ec2.yaml ${WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=$WORKSPACE\""
+            }
             }
         }
     }
@@ -127,6 +135,7 @@ pipeline {
             dir('realworld-cicd-pipeline-project-main/') {
             withCredentials([usernamePassword(credentialsId: 'Ansible-Credential', passwordVariable: 'PASSWORD', usernameVariable: 'USER_NAME')]) {
                 sh "ansible-playbook -i ${WORKSPACE}/ansible-config/aws_ec2.yaml ${WORKSPACE}/deploy.yaml --extra-vars \"ansible_user=$USER_NAME ansible_password=$PASSWORD hosts=tag_Environment_$HOSTS workspace_path=$WORKSPACE\""
+            }
             }
          }
       }
